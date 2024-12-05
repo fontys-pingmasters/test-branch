@@ -51,12 +51,21 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      - uses: Azure/k8s-create-secret@v4
+        with:
+           container-registry-url: ghcr.io
+           container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
+           container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+           secret-name: ghcr-secret
+
       - name: Deploy to the Kubernetes cluster
         uses: azure/k8s-deploy@v5
         with:
           namespace: default
           manifests: |
             kubernetes/acceptance.yml
+          imagepullsecrets: |
+              ghcr-secret
 
 
   deploy-production:
@@ -84,9 +93,18 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      - uses: Azure/k8s-create-secret@v4
+        with:
+           container-registry-url: ghcr.io
+           container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
+           container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+           secret-name: ghcr-secret
+
       - name: Deploy to the Kubernetes cluster
         uses: azure/k8s-deploy@v5
         with:
           namespace: default
           manifests: |
             kubernetes/production.yml
+          imagepullsecrets: |
+              ghcr-secret
