@@ -38,6 +38,11 @@ jobs:
       url: https://prod.pongello.nl/
 
     steps:
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: '1.31.2'
+        id: install
+
       - name: Set the Kubernetes context
         uses: azure/k8s-set-context@v4
         with:
