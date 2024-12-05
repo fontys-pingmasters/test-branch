@@ -40,7 +40,7 @@ jobs:
     steps:
       - uses: azure/setup-kubectl@v4
         with:
-          version: '1.31.2'
+          version: 'v1.31.2'
         id: install
 
       - name: Set the Kubernetes context
