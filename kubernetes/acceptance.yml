@@ -1,0 +1,102 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: whoami-beta
+spec:
+  selector:
+    matchLabels:
+      app: whoami-beta
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: whoami-beta
+    spec:
+      containers:
+        - name: whoami
+          image: traefik/whoami:v1.9.0
+          ports:
+            - containerPort: 80
+          env:
+            - name: WHOAMI_NAMES
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: WHOAMI_NAME
+              value: "acceptance"
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: whoami-beta
+  annotations:
+    # These annotations are used by ExternalDNS to create a DNS record in Cloudflare
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    external-dns.alpha.kubernetes.io/hostname: beta.pongello.nl
+    # This is set to the tunnel ID of the Cloudflare Tunnel and always ends with .cfargotunnel.com
+    external-dns.alpha.kubernetes.io/target: "84d2f091-ce68-4d98-a6cd-628fb86cb341.cfargotunnel.com"
+    # Sources:
+    # https://www.robert-jensen.dk/posts/2024-external-dns-with-cloudflare/
+    # https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/cloudflare.md
+    # https://github.com/kubernetes-sigs/external-dns/issues/4263
+    # https://itnext.io/exposing-kubernetes-apps-to-the-internet-with-cloudflare-tunnel-ingress-controller-and-e30307c0fcb0
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5678
+      targetPort: 80
+  selector:
+    app: whoami-beta
+---
+kind: IngressRoute
+apiVersion: traefik.io/v1alpha1
+metadata:
+  name: whoami-beta
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`beta.pongello.nl`)
+      kind: Rule
+      services:
+        - name: whoami-beta
+          port: 5678
+          # Enable sticky connection
+          # https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/#stickiness-and-load-balancing
+          # Disabled for testing purposes
+          #sticky:
+          #  cookie:
+          #    name: sticky-cookie
+          #    secure: true
+          #    httpOnly: true
+      middlewares:
+      - name: real-ip-middleware
+        namespace: default
+  tls:
+    secretName: whoami-beta-ingressroute-certificate-secret
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: whoami-beta
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: whoami-beta
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 25

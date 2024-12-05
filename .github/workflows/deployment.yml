@@ -26,12 +26,44 @@ jobs:
           echo Add other actions to build,
           echo test, and deploy your project.
 
-
-  deploy:
+  deploy-acceptance:
     # Run in kubernetes cluster, will be changed to "production" later
     runs-on: arc-runner-set
 
     needs: [build]
+    
+    environment:
+      name: acceptance
+      url: https://beta.pongello.nl/
+
+    steps:
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.31.2'
+        id: install
+
+      - name: Set the Kubernetes context
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Deploy to the Kubernetes cluster
+        uses: azure/k8s-deploy@v5
+        with:
+          namespace: default
+          manifests: |
+            kubernetes/acceptance.yml
+
+
+  deploy-production:
+    # Run in kubernetes cluster, will be changed to "production" later
+    runs-on: arc-runner-set
+
+    needs: [deploy-acceptance]
     
     environment:
       name: production
@@ -57,4 +89,4 @@ jobs:
         with:
           namespace: default
           manifests: |
-            kubernetes/manifest.yml
+            kubernetes/production.yml
