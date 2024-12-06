@@ -124,3 +124,44 @@ jobs:
           strategy: blue-green
           version-switch-buffer: 30
           images: traefik/whoami:v1.10.3
+
+
+
+  revert-production:
+    # Run in kubernetes cluster, will be changed to "production" later
+    runs-on: arc-runner-set
+
+    needs: [deploy-acceptance]
+
+    steps:
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.31.2'
+        id: install
+
+      - name: Set the Kubernetes context
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - uses: Azure/k8s-create-secret@v4
+        with:
+            container-registry-url: ghcr.io
+            container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
+            container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+            secret-name: ghcr-secret
+
+      - name: Deploy to the Kubernetes cluster
+        uses: azure/k8s-deploy@v5
+        with:
+          namespace: default
+          manifests: |
+            kubernetes/production.yml
+          imagepullsecrets: |
+              ghcr-secret
+          strategy: blue-green
+          action: reject

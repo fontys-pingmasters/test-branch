@@ -10,7 +10,7 @@ spec:
   selector:
     matchLabels:
       app: whoami
-  replicas: 1
+  replicas: 2
   template:
     metadata:
       labels:
@@ -27,7 +27,7 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
             - name: WHOAMI_NAME
-              value: "HELP ME NOW AAAA"
+              value: "this will be gone soon"
           resources:
             limits:
               memory: "128Mi"
