@@ -121,3 +121,5 @@ jobs:
             kubernetes/production.yml
           imagepullsecrets: |
               ghcr-secret
+          strategy: blue-green
+          images: traefik/whoami:v1.10.3
