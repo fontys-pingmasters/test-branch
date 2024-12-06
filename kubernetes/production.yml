@@ -27,7 +27,7 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
             - name: WHOAMI_NAME
-              value: "github-actions OMG EEN UPDATE"
+              value: "HELP ME NOW AAAA"
           resources:
             limits:
               memory: "128Mi"
