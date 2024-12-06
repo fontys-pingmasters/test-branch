@@ -122,7 +122,7 @@ jobs:
           imagepullsecrets: |
               ghcr-secret
           strategy: blue-green
-          version-switch-buffer: 30
+          version-switch-buffer: 1
           images: traefik/whoami:v1.10.3
 
 
