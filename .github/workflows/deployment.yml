@@ -74,9 +74,9 @@ jobs:
       - name: Deploy to the Kubernetes cluster
         uses: azure/k8s-deploy@v5
         with:
-          namespace: default
+          namespace: acceptance
           manifests: |
-            kubernetes/acceptance.yml
+            kubernetes/deployment.yml
           imagepullsecrets: |
               ghcr-secret
 
@@ -116,8 +116,8 @@ jobs:
       - name: Deploy to the Kubernetes cluster
         uses: azure/k8s-deploy@v5
         with:
-          namespace: default
+          namespace: production
           manifests: |
-            kubernetes/production.yml
+            kubernetes/deployment.yml
           imagepullsecrets: |
               ghcr-secret
