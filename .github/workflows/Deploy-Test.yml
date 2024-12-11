@@ -14,8 +14,10 @@ jobs:
         uses: actions/checkout@v3
 
       # ff testen of het werkt hihihih
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Test SSH connection from GitHub Actions
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_KEY }} ansible@${{ secrets.HOST }} -p ${{ secrets.PORT }} "echo connected"
+
       
       #ssh shit
       - name: Deploy to test server
