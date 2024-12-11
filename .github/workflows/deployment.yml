@@ -10,7 +10,7 @@ env:
 jobs:
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout source code
@@ -20,7 +20,7 @@ jobs:
         run: echo "Run tests"
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     needs: [test]
 
