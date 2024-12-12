@@ -16,6 +16,10 @@ jobs:
       - name: test ping
         run: |
           ping -c 4 10.10.4.14
+
+      - name: copy paste compose file
+        run: |
+          scp ./docker/dockercomposetest ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/ansible/
       
       #ssh shit
       - name: Deploy to test server
