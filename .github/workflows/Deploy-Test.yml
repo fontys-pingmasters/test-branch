@@ -17,9 +17,9 @@ jobs:
         run: |
           ping -c 4 10.10.4.14
       # ff testen of het werkt hihihih
-      - name: Test SSH connection from GitHub Actions
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_KEY }} ansible@${{ secrets.HOST }} -p ${{ secrets.PORT }} "echo connected"
+      #- name: Test SSH connection from GitHub Actions
+      #  run: |
+      #    ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_KEY }} ansible@${{ secrets.HOST }} -p ${{ secrets.PORT }} "echo connected"
 
       
       #ssh shit
