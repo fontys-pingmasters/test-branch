@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: test-server-runner
+    runs-on: test
     environment:
       name: test
       url: https://test.pongello.nl/
