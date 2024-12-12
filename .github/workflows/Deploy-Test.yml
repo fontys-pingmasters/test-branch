@@ -31,5 +31,5 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd /home/ansible/compose
-            docker compose down
-            docker compose up --build -d
+            docker compose -f dockercomposetest.yml down
+            docker compose -f dockercomposetest.yml up --build -d
