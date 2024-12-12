@@ -19,7 +19,7 @@ jobs:
 
       - name: copy paste compose file
         run: |
-          scp ./docker/dockercomposetest ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/ansible/
+          scp ./docker/dockercomposetest ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/ansible/compose/
       
       #ssh shit
       - name: Deploy to test server
