@@ -1,4 +1,4 @@
-name: Build and Deploy to Production
+name: Build and Deploy to Acceptation / Production
 
 on:
   push:
@@ -12,22 +12,14 @@ env:
   DEPLOY_NAMESPACE: ${{ github.event_name == 'push' && 'acceptance' || 'production' }}
 
 jobs:
-  test:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
-      - name: Run tests
-        run: echo "Run tests"
 
   build:
     runs-on: ubuntu-24.04
-    needs: [test]
     steps:
       - uses: actions/checkout@v4
-      - name: Run a one-line script
+      - name: Build container
         run: echo Hello, world!
-      - name: Run a multi-line script
+      - name: Upload container
         run: |
           echo Add other actions to build,
           echo test, and deploy your project.
