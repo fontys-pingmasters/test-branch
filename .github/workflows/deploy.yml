@@ -11,6 +11,7 @@ on:
         required: true
         type: boolean
         default: false
+        description: 'Deploy to production'
 
 env:
   KUBECTL_VERSION: 'v1.31.2'
@@ -63,7 +64,7 @@ jobs:
     needs: [build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment:
-      name: ${{ github.event_name == 'push' && 'acceptance' }}
+      name: acceptance
       url: ${{ env.DEPLOY_URL }}
     steps:
       - uses: azure/setup-kubectl@v4
@@ -101,7 +102,7 @@ jobs:
     needs: [build]
     if: ${{ inputs.perform_deploy }}
     environment:
-      name: ${{ github.event == 'workflow_dispatch' && 'production' }}
+      name: production
       url: ${{ env.DEPLOY_URL }}
     steps:
       - uses: azure/setup-kubectl@v4
