@@ -1,4 +1,4 @@
-name: Build and Deploy to Production
+name: Build and Deploy to Acceptation / Production
 
 on:
   push:
@@ -53,12 +53,12 @@ jobs:
             docker compose -f dockercomposetest.yml down
             docker compose -f dockercomposetest.yml up --build -d
 
-  deploy:
+  deploy-acceptance:
     runs-on: production-runner
     needs: [build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event == 'workflow_dispatch'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment:
-      name: ${{ github.event_name == 'push' && 'acceptance' || 'production' }}
+      name: ${{ github.event_name == 'push' && 'acceptance' }}
       url: ${{ env.DEPLOY_URL }}
     steps:
       - uses: azure/setup-kubectl@v4
@@ -81,6 +81,44 @@ jobs:
            container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
            container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
            secret-name: ghcr-secret
+
+      - name: Deploy to the Kubernetes cluster
+        uses: azure/k8s-deploy@v5
+        with:
+          namespace: ${{ env.DEPLOY_NAMESPACE }}
+          manifests: |
+            kubernetes/deployment.yml
+          imagepullsecrets: |
+              ghcr-secret
+
+  deploy-production:
+    runs-on: production-runner
+    needs: [build]
+    if: github.event == 'workflow_dispatch'
+    environment:
+      name: ${{ github.event == 'workflow_dispatch' && 'production' }}
+      url: ${{ env.DEPLOY_URL }}
+    steps:
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: ${{ env.KUBECTL_VERSION }}
+        id: install
+
+      - name: Set the Kubernetes context
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - uses: Azure/k8s-create-secret@v4
+        with:
+            container-registry-url: ghcr.io
+            container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
+            container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+            secret-name: ghcr-secret
 
       - name: Deploy to the Kubernetes cluster
         uses: azure/k8s-deploy@v5
