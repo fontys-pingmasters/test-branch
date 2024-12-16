@@ -9,7 +9,7 @@ on:
 
 env:
   KUBECTL_VERSION: 'v1.31.2'
-  DEPLOY_URL: ${{ github.event_name == 'push' && 'https://beta.pongello.nl/' || 'https://prod.pongello.nl/' }}
+  DEPLOY_URL: ${{ github.event_name == 'push' && 'https://beta.pongello.nl/' || 'https://pongello.nl/' }}
   DEPLOY_NAMESPACE: ${{ github.event_name == 'push' && 'acceptance' || 'production' }}
 
 jobs:
