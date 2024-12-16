@@ -1,0 +1,67 @@
+name: Build and Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  KUBECTL_VERSION: 'v1.31.2'
+  DEPLOY_ENV: ${{ github.event_name == 'push' && 'acceptance' || 'production' }}
+  DEPLOY_URL: ${{ github.event_name == 'push' && 'https://beta.pongello.nl/' || 'https://prod.pongello.nl/' }}
+  DEPLOY_NAMESPACE: ${{ github.event_name == 'push' && 'acceptance' || 'production' }}
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      - name: Run tests
+        run: echo "Run tests"
+
+  build:
+    runs-on: ubuntu-24.04
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run a one-line script
+        run: echo Hello, world!
+      - name: Run a multi-line script
+        run: |
+          echo Add other actions to build,
+          echo test, and deploy your project.
+
+  deploy:
+    runs-on: production-runner
+    needs: [build]
+    environment:
+      name: ${{ env.DEPLOY_ENV }}
+      url: ${{ env.DEPLOY_URL }}
+    steps:
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: ${{ env.KUBECTL_VERSION }}
+        id: install
+      - name: Set the Kubernetes context
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      - uses: Azure/k8s-create-secret@v4
+        with:
+           container-registry-url: ghcr.io
+           container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
+           container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+           secret-name: ghcr-secret
+      - name: Deploy to the Kubernetes cluster
+        uses: azure/k8s-deploy@v5
+        with:
+          namespace: ${{ env.DEPLOY_NAMESPACE }}
+          manifests: |
+            kubernetes/deployment.yml
+          imagepullsecrets: |
+              ghcr-secret
