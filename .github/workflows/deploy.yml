@@ -90,3 +90,15 @@ jobs:
             kubernetes/deployment.yml
           imagepullsecrets: |
               ghcr-secret
+
+  release:
+    runs-on: ubuntu-24.04
+    needs: [deploy]
+    if: github.event == 'workflow_dispatch'
+    environment:
+      name: ${{ github.event == 'workflow_dispatch' && 'production' }}
+      url: ${{ env.DEPLOY_URL }}
+    steps:
+      - name: Create new release
+        run: |
+          echo Create release
