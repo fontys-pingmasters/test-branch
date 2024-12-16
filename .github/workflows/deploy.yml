@@ -4,11 +4,12 @@ on:
   push:
     branches:
       - main
+      - develop
   workflow_dispatch:
 
 env:
   KUBECTL_VERSION: 'v1.31.2'
-  DEPLOY_URL: ${{ github.event_name == 'push' && 'https://beta.pongello.nl/' || 'https://prod.pongello.nl/' }}
+  DEPLOY_URL: ${{ github.event_name == 'push' && 'https://beta.pongello.nl/' || 'https://pongello.nl/' }}
   DEPLOY_NAMESPACE: ${{ github.event_name == 'push' && 'acceptance' || 'production' }}
 
 jobs:
@@ -24,9 +25,38 @@ jobs:
           echo Add other actions to build,
           echo test, and deploy your project.
 
+  deploy-test:
+    runs-on: test
+    needs: [build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    environment:
+      name: test
+      url: https://test.pongello.nl/
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: copy paste compose file
+        run: |
+          scp ./docker/dockercomposetest.yml ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/ansible/compose/
+      
+      #ssh shit
+      - name: Deploy to test server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /home/ansible/compose
+            docker compose -f dockercomposetest.yml down
+            docker compose -f dockercomposetest.yml up --build -d
+
   deploy:
     runs-on: production-runner
     needs: [build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event == 'workflow_dispatch'
     environment:
       name: ${{ github.event_name == 'push' && 'acceptance' || 'production' }}
       url: ${{ env.DEPLOY_URL }}
@@ -35,19 +65,23 @@ jobs:
         with:
           version: ${{ env.KUBECTL_VERSION }}
         id: install
+
       - name: Set the Kubernetes context
         uses: azure/k8s-set-context@v4
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
       - name: Checkout source code
         uses: actions/checkout@v4
+
       - uses: Azure/k8s-create-secret@v4
         with:
            container-registry-url: ghcr.io
            container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
            container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
            secret-name: ghcr-secret
+
       - name: Deploy to the Kubernetes cluster
         uses: azure/k8s-deploy@v5
         with:
