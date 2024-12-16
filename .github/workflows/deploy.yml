@@ -8,7 +8,6 @@ on:
 
 env:
   KUBECTL_VERSION: 'v1.31.2'
-  DEPLOY_ENV: ${{ github.event_name == 'push' && 'acceptance' || 'production' }}
   DEPLOY_URL: ${{ github.event_name == 'push' && 'https://beta.pongello.nl/' || 'https://prod.pongello.nl/' }}
   DEPLOY_NAMESPACE: ${{ github.event_name == 'push' && 'acceptance' || 'production' }}
 
@@ -37,7 +36,7 @@ jobs:
     runs-on: production-runner
     needs: [build]
     environment:
-      name: ${{ env.DEPLOY_ENV }}
+      name: ${{ github.event_name == 'push' && 'acceptance' || 'production' }}
       url: ${{ env.DEPLOY_URL }}
     steps:
       - uses: azure/setup-kubectl@v4
